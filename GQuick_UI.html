@@ -1,0 +1,2480 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <base target="_top">
+    <meta charset="UTF-8">
+    <title>Q-Quick NEXT</title>
+
+    <!-- モバイルアプリ設定 & アイコン (最優先事項) -->
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-title" content="Q-Quick NEXT">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="theme-color" content="#0b0f1a">
+
+
+
+
+<!-- フォント: システムフォントスタックを使用 (Google Fonts はGASサンドボックス非対応のため削除) -->
+    <style>
+        :root {
+            /* ダークモード (デフォルト) */
+            --bg: #0b0f1a;
+            --surface: rgba(30, 41, 59, 0.7); /* 仮想スクロール化により透過・ガラス表現復活 */
+            --surface-hover: rgba(51, 65, 85, 0.8);
+            --primary: #3b82f6;
+            --primary-glow: rgba(59, 130, 246, 0.5);
+            --text: #f8fafc;
+            --text-sub: #94a3b8;
+            --border: rgba(255, 255, 255, 0.08); /* 透過ボーダー復活 */
+            --border-highlight: rgba(255, 255, 255, 0.15);
+            --accent: #fbbf24;
+            /* Amber */
+            --shadow: rgba(0, 0, 0, 0.4);
+            --header-bg: #0b0f1a;
+            --glass-blur: 0px;
+
+            /* バッジ */
+            --badge-bg: rgba(52, 211, 153, 0.1);
+            --badge-text: #34d399;
+            --badge-border: rgba(52, 211, 153, 0.2);
+        }
+
+        [data-theme="light"] {
+            /* ライトモード - ガラス質感を維持しつつ明るく */
+            --bg: #f1f5f9;
+            --surface: rgba(255, 255, 255, 0.7); /* ガラス表現復活 */
+            --surface-hover: rgba(255, 255, 255, 0.9);
+            --primary: #2563eb;
+            --primary-glow: rgba(37, 99, 235, 0.3);
+            --text: #0f172a;
+            --text-sub: #475569;
+            --border: rgba(0, 0, 0, 0.15);
+            --border-highlight: rgba(0, 0, 0, 0.3);
+            --accent: #d97706;
+            --shadow: rgba(0, 0, 0, 0.08);
+            --header-bg: #f1f5f9;
+
+            --badge-bg: rgba(37, 99, 235, 0.05);
+            --badge-text: #1d4ed8;
+            --badge-border: rgba(37, 99, 235, 0.1);
+        }
+
+        /* スクロールバー - ダークテーマ用 */
+        html, *, *::before, *::after {
+            scrollbar-width: thin;
+            scrollbar-color: rgba(255, 255, 255, 0.15) transparent;
+        }
+        html::-webkit-scrollbar,
+        *::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        html::-webkit-scrollbar-track,
+        *::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        html::-webkit-scrollbar-thumb,
+        *::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.15);
+            border-radius: 4px;
+        }
+        html::-webkit-scrollbar-thumb:hover,
+        *::-webkit-scrollbar-thumb:hover {
+            background: rgba(255, 255, 255, 0.25);
+        }
+        html::-webkit-scrollbar-corner,
+        *::-webkit-scrollbar-corner {
+            background: transparent;
+        }
+
+        /* スクロールバー - ライトテーマ用 */
+        [data-theme="light"],
+        [data-theme="light"] * {
+            scrollbar-color: rgba(0, 0, 0, 0.2) transparent;
+        }
+        [data-theme="light"]::-webkit-scrollbar-thumb,
+        [data-theme="light"] *::-webkit-scrollbar-thumb {
+            background: rgba(0, 0, 0, 0.2);
+        }
+        [data-theme="light"]::-webkit-scrollbar-thumb:hover,
+        [data-theme="light"] *::-webkit-scrollbar-thumb:hover {
+            background: rgba(0, 0, 0, 0.35);
+        }
+
+        html, body {
+            overflow: hidden;
+            height: 100%;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', 'Noto Sans JP', sans-serif;
+            background-color: var(--bg);
+            color: var(--text);
+            line-height: 1.6;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        .app-scroll-wrapper {
+            height: 100vh;
+            overflow-y: auto;
+            overflow-x: hidden;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            background: var(--bg);
+        }
+
+        header {
+            padding: 6px 24px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: var(--header-bg);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            border-bottom: 1px solid var(--border);
+        }
+
+        /* チャンネル管理ダイアログ */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(8px);
+            z-index: 1000;
+            display: none;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-overlay.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: var(--bg);
+            border: 1px solid var(--border-highlight);
+            border-radius: 20px;
+            width: 90%;
+            max-width: 500px;
+            max-height: 80vh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
+        }
+
+        .modal-header {
+            padding: 20px;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .modal-header h2 {
+            margin: 0;
+            font-size: 1.2rem;
+            color: var(--accent);
+        }
+
+        .modal-body {
+            padding: 20px;
+            overflow-y: auto;
+            flex: 1;
+        }
+
+        .channel-editor-item {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 12px;
+            align-items: center;
+        }
+
+        .channel-editor-item input {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            padding: 8px 12px;
+            color: var(--text);
+            font-size: 13px;
+            flex: 1;
+        }
+
+        .modal-footer {
+            padding: 16px 20px;
+            border-top: 1px solid var(--border);
+            display: flex;
+            justify-content: flex-end;
+            gap: 12px;
+        }
+
+        .btn-secondary {
+            background: var(--surface);
+            color: var(--text);
+        }
+
+        .logo-wrapper {
+            display: flex;
+            align-items: center;
+            padding: 0;
+        }
+
+        .logo-wrapper h1 {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', sans-serif;
+            font-size: 1.4rem;
+            font-weight: 900;
+            margin: 0;
+            color: var(--text);
+            letter-spacing: -0.02em;
+            display: flex;
+            align-items: center;
+            font-style: italic;
+            white-space: nowrap;
+            /* スマホ縦持ちでも絶対に折り返さない */
+            flex-shrink: 0;
+            /* 検索ボックスに負けない */
+        }
+
+        .q-char {
+            color: #ff9800;
+            /* オレンジ（Amber） */
+            -webkit-text-stroke: 1.2px #000;
+            /* 黒の縁取り */
+            font-size: 2.0rem;
+            line-height: 1;
+            margin-right: 6px;
+            filter: drop-shadow(0 0 10px rgba(255, 152, 0, 0.4));
+            position: relative;
+            display: inline-block;
+            /* 欠け防止 */
+            padding-right: 4px;
+            /* 右側の余裕を確保 */
+            transform: skewX(-10deg);
+            /* 自前の傾斜でスピード感を維持 */
+        }
+
+        /* アンダーライン装飾：オレンジに合わせて調整 */
+        .q-char::after {
+            content: '';
+            position: absolute;
+            bottom: -2px;
+            left: 5%;
+            width: 90%;
+            height: 3px;
+            background: linear-gradient(90deg, transparent, #ff9800, transparent);
+            border-radius: 2px;
+        }
+
+        .logo-text {
+            color: var(--text);
+            font-size: 1.2rem;
+            font-weight: 800;
+            letter-spacing: 0.1em;
+            text-shadow: 0 0 20px rgba(255, 255, 255, 0.1);
+            opacity: 0.95;
+            margin-left: 2px;
+            white-space: nowrap;
+            /* 念のためここも固定 */
+        }
+
+        .controls {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            position: relative;
+        }
+
+        .search-wrapper {
+            display: flex;
+            align-items: center;
+            background: var(--surface);
+            border-radius: 10px;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            /* 超・明示的なボーダー */
+            overflow: hidden;
+            width: 190px;
+            margin-left: 8px;
+            transition: all 0.2s;
+        }
+
+        .search-wrapper:focus-within {
+            border-color: var(--primary);
+            box-shadow: 0 0 8px var(--primary-glow);
+        }
+
+        #searchInput {
+            flex: 1;
+            min-width: 0;
+            /* ボタンを押し出さないように縮小を許可 */
+            padding: 6px 12px;
+            border: none;
+            background: transparent;
+            outline: none;
+            color: var(--text);
+            font-size: 13px;
+        }
+
+        .search-clear-btn {
+            background: transparent;
+            border: none;
+            border-left: 1px solid rgba(255, 255, 255, 0.2);
+            color: var(--text-sub);
+            padding: 0;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: bold;
+            line-height: 1;
+            transition: all 0.2s;
+            width: 32px !important;
+            height: 32px !important;
+            min-width: 32px !important;
+        }
+
+        .search-clear-btn:hover {
+            background: rgba(239, 68, 68, 0.1) !important;
+            color: #ef4444 !important;
+        }
+
+        #searchInput:focus {
+            outline: none;
+            box-shadow: none;
+        }
+
+        button {
+            padding: 6px 14px;
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 700;
+            font-size: 13px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        button:hover {
+            opacity: 0.9;
+        }
+
+        button:active {
+            opacity: 0.8;
+        }
+
+        button:disabled {
+            background-color: var(--surface-hover);
+            color: var(--text-sub);
+            cursor: not-allowed;
+            opacity: 0.6;
+            box-shadow: none;
+        }
+
+        .icon-btn {
+            padding: 8px;
+            background-color: var(--surface);
+            color: var(--text);
+            border: 1px solid var(--border);
+        }
+
+        .icon-btn:hover {
+            background-color: var(--surface-hover);
+            border-color: var(--border-highlight);
+        }
+
+        /* Bulk Action Group */
+        /* Bulk Action Group (Always Visible & Refined) */
+        .bulk-action-group {
+            display: flex;
+            align-items: center;
+            gap: 0;
+            background: var(--surface);
+            border-radius: 10px;
+            border: 1px solid var(--border);
+            overflow: hidden;
+            margin-left: 8px;
+            opacity: 1;
+            /* 常時表示 */
+            transform: none;
+            pointer-events: auto;
+        }
+
+        /* 選択されている時の発光スタイル */
+        .bulk-action-group.has-selection {
+            border-color: var(--primary);
+            box-shadow: 0 0 12px var(--primary-glow);
+        }
+
+        #bulkCopyBtn,
+        #bulkClearBtn {
+            background: transparent;
+            border: none;
+            color: var(--text-sub);
+            padding: 6px 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+        }
+
+        #bulkCopyBtn {
+            padding-right: 10px;
+            border-right: 1px solid var(--border);
+            color: var(--primary);
+            /* 鎖は常に目立たせる */
+        }
+
+        #bulkClearBtn {
+            font-size: 16px;
+            line-height: 1;
+            font-weight: bold;
+        }
+
+        #bulkCopyBtn:hover {
+            background: rgba(37, 99, 235, 0.1);
+        }
+
+        #bulkClearBtn:hover {
+            background: rgba(239, 68, 68, 0.1);
+            color: #ef4444;
+        }
+
+        #bulkActionGroup.has-selection #bulkCopyBtn {
+            color: var(--primary);
+        }
+
+        /* Settings Menu */
+        .settings-menu {
+            position: absolute;
+            top: 100%;
+            right: 0;
+            margin-top: 6px;
+            background: var(--surface);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid var(--border-highlight);
+            border-radius: 16px;
+            width: 220px;
+            transform: translateY(0);
+            z-index: 200;
+            overflow: hidden;
+            display: none;
+            box-shadow: 0 10px 25px var(--shadow);
+        }
+
+        [data-theme="light"] .settings-menu {
+            border: 1.5px solid #000 !important;
+            /* ライトモード時は黒でしっかり囲む */
+        }
+
+        .settings-menu.active {
+            display: block;
+        }
+
+        .menu-item {
+            padding: 12px 16px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--text);
+        }
+
+        .menu-item:hover {
+            background: var(--surface-hover);
+        }
+
+        .menu-separator {
+            height: 1px;
+            background: var(--border);
+            margin: 4px 0;
+        }
+
+        .menu-item.refresh-item {
+            color: var(--primary);
+            gap: 8px;
+            justify-content: flex-start;
+        }
+
+        [data-theme="light"] .menu-item:hover {
+            background-color: rgba(37, 99, 235, 0.1) !important;
+            /* よりはっきりした薄い青 */
+        }
+
+        .menu-item svg {
+            width: 18px;
+            height: 18px;
+            color: var(--text-sub);
+        }
+
+        /* 期間選択セクション（スライド式） */
+        .latest-duration-container {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            overflow: hidden;
+            max-width: 0;
+            opacity: 0;
+        }
+
+        .latest-duration-container.active {
+            max-width: 160px;
+            /* 4つのチップが入る十分な幅 */
+            opacity: 1;
+            margin-left: 8px;
+            flex-shrink: 0;
+        }
+
+        .day-chip {
+            flex-shrink: 0;
+            /* チップ自体も潰さない */
+            padding: 2px 7px;
+            border-radius: 6px;
+            font-size: 11px;
+            font-weight: 800;
+            cursor: pointer;
+            color: var(--text-sub);
+            background: var(--surface-hover);
+            border: 1px solid transparent;
+        }
+
+        .day-chip:hover {
+            opacity: 0.8;
+            border-color: var(--primary);
+        }
+
+        .day-chip.active {
+            background: var(--primary);
+            color: white;
+            box-shadow: 0 2px 6px var(--primary-glow);
+        }
+
+        .duration-toggle-btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 24px;
+            height: 24px;
+            flex-shrink: 0;
+            border-radius: 50%;
+            cursor: pointer;
+            color: var(--text-sub);
+            margin-right: -4px;
+        }
+
+        .duration-toggle-btn:hover {
+            background: var(--surface-hover);
+            color: var(--primary);
+        }
+
+        .duration-toggle-btn.active svg {
+            transform: rotate(180deg);
+        }
+
+        /* List Styles */
+        .list-container {
+            flex-grow: 1;
+            padding: 8px 16px 60px;
+        }
+
+        .video-item {
+            height: 90px;
+            box-sizing: border-box;
+            display: flex;
+            gap: 12px;
+            padding: 6px 12px;
+            background-color: var(--surface);
+            backdrop-filter: blur(20px); /* 1万件でも20要素しか描画しないため復活OK */
+            -webkit-backdrop-filter: blur(20px);
+            border-radius: 6px;
+            margin-bottom: 6px;
+            border: 1px solid var(--border);
+            cursor: pointer;
+            position: relative;
+            contain: content; /* 最適化: ブラウザのレイアウト計算を要素内に限定し、コンポジット落ちを防ぐ */
+            overflow: hidden; /* 仮想スクロール高さハミ出し防止 */
+            text-decoration: none;
+            color: inherit;
+            user-select: none;
+            /* テキスト選択を防止してクリック操作を快適に */
+        }
+
+        .video-item.selected {
+            border: 2px solid var(--primary);
+            background-color: var(--surface-hover);
+            box-shadow: 0 0 20px var(--primary-glow);
+        }
+
+        /* 選択時のチェック表示 */
+        .video-item.selected::before {
+            content: '✓';
+            position: absolute;
+            top: 12px;
+            left: 12px;
+            width: 24px;
+            height: 24px;
+            background: var(--primary);
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            font-weight: 900;
+            z-index: 10;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+        }
+
+        .video-item.kb-focus {
+            background-color: var(--surface-hover);
+            border-color: var(--accent);
+            box-shadow: 0 0 12px rgba(251, 191, 36, 0.4);
+        }
+
+        @media (hover: hover) {
+            .video-item:hover {
+                background-color: var(--surface-hover);
+                border-color: var(--primary);
+            }
+
+            [data-theme="light"] .video-item:hover {
+                background-color: rgba(37, 99, 235, 0.1) !important;
+            }
+        }
+
+        .video-item:active {
+            opacity: 0.9;
+        }
+
+        .thumbnail-wrapper {
+            flex-shrink: 0;
+            width: 136px;
+            height: 76px;
+            /* 比率維持 */
+            border-radius: 4px;
+            overflow: hidden;
+            background: #0f172a;
+            box-shadow: 0 4px 12px var(--shadow); /* 重厚なシャドウを復活 */
+        }
+
+        .thumbnail-wrapper img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .video-content {
+            flex-grow: 1;
+            min-width: 0;
+        }
+
+        .video-item:last-child {
+            border-bottom: none;
+        }
+
+        .video-title {
+            font-size: 13.5px;
+            font-weight: 700;
+            margin-bottom: 2px;
+            color: var(--text);
+            line-height: 1.35;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+
+        .video-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            font-size: 11.5px;
+            color: var(--text-sub);
+            align-items: center;
+            font-weight: 400;
+        }
+
+        .meta-item {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .meta-item.views {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .meta-item.channel {
+            color: var(--accent);
+            font-weight: 700;
+        }
+
+        .meta-item.duration {
+            background: var(--surface-hover);
+            color: var(--text);
+            padding: 1px 6px;
+            border-radius: 4px;
+            font-size: 10.5px;
+            font-weight: 800;
+        }
+
+        .loading-overlay {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 100px 32px;
+            color: var(--text-sub);
+        }
+
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid rgba(59, 130, 246, 0.1);
+            border-top: 4px solid var(--primary);
+            border-radius: 50%;
+            animation: spin 1s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+            margin-bottom: 24px;
+        }
+
+        @keyframes spin {
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+
+        .status-bar {
+            padding: 12px 32px;
+            font-size: 11px;
+            color: var(--text-sub);
+            border-top: 1px solid var(--border-light);
+            display: flex;
+            justify-content: space-between;
+            font-weight: 600;
+        }
+
+        /* 以前のGクイックのようなバッジ類 */
+        .batch-label {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 6px;
+            font-size: 11px;
+            font-weight: 800;
+            background: var(--badge-bg);
+            color: var(--badge-text);
+            border: 1px solid var(--badge-border);
+            transition: all 0.3s;
+        }
+
+        /* URL Copy Button context-aware styles */
+        .url-copy {
+            margin-left: auto;
+            cursor: pointer;
+            font-size: 11px;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            padding: 6px 12px;
+            border-radius: 8px;
+            background: var(--surface-hover);
+            border: 1px solid var(--border-highlight);
+            color: var(--text-sub);
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            opacity: 0.85;
+            /* ライトモード考慮で高めに設定 */
+        }
+
+        [data-theme="light"] .url-copy {
+            background: #fff;
+            border: 1.5px solid #000;
+            /* 黒でしっかり囲む */
+            color: #000;
+            opacity: 1;
+            /* ライトモードでは完全に不透明にして視認性を確保 */
+        }
+
+        .url-copy:hover {
+            opacity: 1;
+            transform: translateY(-1px);
+            background: var(--surface-hover);
+            border-color: var(--primary);
+            color: var(--primary);
+            box-shadow: 0 4px 12px var(--shadow);
+        }
+
+        .url-copy svg {
+            transition: transform 0.2s;
+        }
+
+        .url-copy:active svg {
+            transform: scale(0.9);
+        }
+
+        /* モバイル用微調整 (スマホ縦持ち等) */
+        @media screen and (max-width: 480px) {
+            header {
+                padding: 6px 12px;
+                /* 余白を詰める */
+            }
+
+            .logo-text {
+                font-size: 1.0rem;
+                /* ロゴを少しだけ小さくして収める */
+            }
+
+            .search-wrapper {
+                width: 150px;
+                /* ボックスもさらに少しスリムに */
+            }
+        }
+    </style>
+</head>
+
+<body tabindex="-1" style="outline:none;">
+<div class="app-scroll-wrapper">
+    <div class="container">
+        <header>
+            <div class="header-left">
+                <div class="logo-wrapper">
+                    <h1>
+                        <span class="q-char">Q</span>
+                        <span class="logo-text">-クイック</span>
+                    </h1>
+                </div>
+            </div>
+            <div class="controls">
+                <!-- チャンネルリストボタン -->
+                <div style="position: relative;">
+                    <button class="icon-btn" onclick="toggleChannelList()" aria-label="Channels"
+                        style="margin-right:8px;">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <line x1="8" y1="6" x2="21" y2="6"></line>
+                            <line x1="8" y1="12" x2="21" y2="12"></line>
+                            <line x1="8" y1="18" x2="21" y2="18"></line>
+                            <line x1="3" y1="6" x2="3.01" y2="6"></line>
+                            <line x1="3" y1="12" x2="3.01" y2="12"></line>
+                            <line x1="3" y1="18" x2="3.01" y2="18"></line>
+                        </svg>
+                    </button>
+                    <!-- チャンネルリストメニュー -->
+                    <div class="settings-menu" id="channelMenu"
+                        style="width: 240px; max-height: 400px; overflow-y: auto; left: 0; right: auto;">
+                        <div id="channelListContainer">
+                            <!-- JSで生成 -->
+                        </div>
+                    </div>
+                </div>
+
+                <div class="search-wrapper">
+                    <input type="text" id="searchInput" placeholder="タイトル検索..." oninput="filterList()"
+                        autocomplete="off">
+                    <button id="searchClearBtn" class="search-clear-btn" onclick="clearSearch()"
+                        title="検索をクリア">&times;</button>
+                </div>
+
+                <!-- 一括アクショングループ -->
+                <div id="bulkActionGroup" class="bulk-action-group">
+                    <button id="bulkCopyBtn" onclick="copySelectedUrls()" title="選択したURLを一括コピー">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path>
+                            <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path>
+                        </svg>
+                    </button>
+                    <button id="bulkClearBtn" onclick="clearSelection()" title="選択を解除">
+                        &times;
+                    </button>
+                </div>
+                <div style="position: relative;">
+                    <button class="icon-btn" onclick="toggleArchiveMenu()" aria-label="Archive" title="チャンネル全データの取得"
+                        style="margin-left: 16px;">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <rect x="2" y="3" width="20" height="5"></rect>
+                            <path d="M4 8v11a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8"></path>
+                            <line x1="10" y1="12" x2="14" y2="12"></line>
+                        </svg>
+                    </button>
+                    <!-- アーカイブ用チャンネル選択メニュー -->
+                    <div id="archiveMenu" class="settings-menu"
+                        style="width: 240px; max-height: 400px; overflow-y: auto; left: auto; right: 0;">
+                        <div id="archiveChannelListContainer">
+                            <!-- JSで生成 -->
+                        </div>
+                    </div>
+                </div>
+                <!-- 設定ボタン -->
+                <div style="position: relative;">
+                    <button class="icon-btn" onclick="toggleSettings()" aria-label="Settings">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <circle cx="12" cy="12" r="3"></circle>
+                            <path
+                                d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z">
+                            </path>
+                        </svg>
+                    </button>
+                    <!-- 設定メニュー -->
+                    <div class="settings-menu" id="settingsMenu">
+                        <div class="menu-item" onclick="setTheme('dark')">
+                            <span>ダークモード</span>
+                            <svg id="icon-dark" width="16" height="16" viewBox="0 0 24 24" fill="none"
+                                stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+                            </svg>
+                        </div>
+                        <div class="menu-item" onclick="setTheme('light')">
+                            <span>ライトモード</span>
+                            <svg id="icon-light" width="16" height="16" viewBox="0 0 24 24" fill="none"
+                                stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <circle cx="12" cy="12" r="5"></circle>
+                                <line x1="12" y1="1" x2="12" y2="3"></line>
+                                <line x1="12" y1="21" x2="12" y2="23"></line>
+                                <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+                                <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+                                <line x1="1" y1="12" x2="3" y2="12"></line>
+                                <line x1="21" y1="12" x2="23" y2="12"></line>
+                                <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+                                <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+                            </svg>
+                        </div>
+                        <div class="menu-separator"></div>
+                        <div class="menu-item refresh-item" onclick="openManual()">
+                            <span style="font-size: 16px;">📖</span>
+                            <span>マニュアルの表示</span>
+                        </div>
+                        <div class="menu-item refresh-item" onclick="openChannelManager()">
+                            <span style="font-size: 16px;">⚙️</span>
+                            <span>チャンネル管理 (DB)</span>
+                        </div>
+                        <div class="menu-separator"></div>
+                        <div class="menu-item refresh-item" id="refreshBtn" onclick="refreshData()">
+                            <span style="font-size: 16px;">🔄</span>
+                            <span>最新情報を再取得</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+
+        </header>
+
+        <!-- Manual Modal -->
+        <div id="manualModal" class="modal-overlay">
+            <div class="modal-content" style="max-width: 800px; max-height: 90vh;">
+                <div class="modal-header">
+                    <h2>Q-Quick マニュアル</h2>
+                    <button class="icon-btn" onclick="closeManual()">&times;</button>
+                </div>
+                <div class="modal-body">
+                    <?!= HtmlService.createHtmlOutputFromFile('Manual').getContent(); ?>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn-secondary" onclick="closeManual()">閉じる</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="list-container" id="listBody">
+            <div class="loading-overlay">
+                <div class="spinner"></div>
+                <p>情報を同期しています...</p>
+            </div>
+        </div>
+        <div id="safetyLimitBoundary"></div>
+
+        <div class="status-bar" id="statusBar">
+            <div style="display:flex; align-items:center; gap:8px;">
+                <span
+                    style="width:8px; height:8px; border-radius:50%; background:#22c55e; box-shadow:0 0 8px #22c55e;"></span>
+                <span>Active</span>
+            </div>
+            <span id="updateTime">Syncing...</span>
+            <span style="opacity: 0.4; font-size: 9px; margin-left: auto;">v5.0 [Official Release]</span>
+        </div>
+
+        <!-- チャンネル管理モーダル -->
+        <div id="channelModal" class="modal-overlay">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2>チャンネル管理 (DBモード)</h2>
+                    <button class="icon-btn" onclick="closeChannelManager()">&times;</button>
+                </div>
+                <div class="modal-body">
+                    <div id="channelEditorList">
+                        <!-- JSで生成 -->
+                    </div>
+                    <button class="btn-secondary" onclick="addChannelInput()"
+                        style="width:100%; justify-content:center; margin-top:10px;">
+                        ＋ チャンネルを追加
+                    </button>
+
+                    <p style="font-size:11px; color:var(--text-sub); margin-top:15px; line-height:1.4;">
+                        ※ チャンネルID（UC...）を入力してください。「名前」は自動取得されます。<br>
+                        ※ 一番上のチャンネルが VIP として起動時に優先表示されます。
+                    </p>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn-secondary" onclick="closeChannelManager()">キャンセル</button>
+                    <button id="saveChannelBtn" class="btn-primary" onclick="saveChannelsFromUI(this)">設定を保存</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+    <script>
+        var allVideos = [];
+        var currentBaseVideos = []; // 現在の表示コンテクスト（フィルタリング前）を保持
+        window.archiveVideos = []; // 明示的にwindowに保持して隔離を徹底
+        var channelConfigs = []; // チャンネル設定を保持
+
+        // --- モバイル長押し（新タブ開く）ヘルパー ---
+        var _lpTimer = null;
+        var _lpFired = false;
+        function _lpStart(url) {
+            _lpFired = false;
+            _lpTimer = setTimeout(() => {
+                _lpFired = true;
+                window.open(url, '_blank');
+            }, 600);
+        }
+        function _lpCancel() {
+            clearTimeout(_lpTimer);
+            _lpTimer = null;
+        }
+
+        // --- 安全なDOM取得ヘルパー ---
+        function $(id) {
+            return document.getElementById(id);
+        }
+
+        // --- IndexedDB ラッパー（非同期・大容量キャッシュ） ---
+        const IDB_NAME = 'gquick_cache';
+        const IDB_STORE = 'snapshots';
+        const IDB_VERSION = 1;
+
+        function idbOpen() {
+            return new Promise((resolve, reject) => {
+                if (!window.indexedDB) { reject(new Error('IndexedDB not supported')); return; }
+                const req = indexedDB.open(IDB_NAME, IDB_VERSION);
+                req.onupgradeneeded = (e) => {
+                    const db = e.target.result;
+                    if (!db.objectStoreNames.contains(IDB_STORE)) {
+                        db.createObjectStore(IDB_STORE);
+                    }
+                };
+                req.onsuccess = () => resolve(req.result);
+                req.onerror = () => reject(req.error);
+            });
+        }
+
+        async function idbGet(key) {
+            const db = await idbOpen();
+            return new Promise((resolve, reject) => {
+                const tx = db.transaction(IDB_STORE, 'readonly');
+                const store = tx.objectStore(IDB_STORE);
+                const req = store.get(key);
+                req.onsuccess = () => resolve(req.result);
+                req.onerror = () => reject(req.error);
+                tx.oncomplete = () => db.close();
+            });
+        }
+
+        async function idbPut(key, value) {
+            const db = await idbOpen();
+            return new Promise((resolve, reject) => {
+                const tx = db.transaction(IDB_STORE, 'readwrite');
+                const store = tx.objectStore(IDB_STORE);
+                const req = store.put(value, key);
+                req.onsuccess = () => resolve();
+                req.onerror = () => reject(req.error);
+                tx.oncomplete = () => db.close();
+            });
+        }
+
+        async function idbDelete(key) {
+            try {
+                const db = await idbOpen();
+                return new Promise((resolve, reject) => {
+                    const tx = db.transaction(IDB_STORE, 'readwrite');
+                    const store = tx.objectStore(IDB_STORE);
+                    const req = store.delete(key);
+                    req.onsuccess = () => resolve();
+                    req.onerror = () => reject(req.error);
+                    tx.oncomplete = () => db.close();
+                });
+            } catch (e) { /* 無視 */ }
+        }
+
+        async function clearSnapshotCache() {
+            await idbDelete('snapshot_v4');
+            await idbDelete('configs_v4');
+            // localStorage側も念のためクリア（旧バージョン移行用）
+            localStorage.removeItem('gquick_snapshot_v4');
+            localStorage.removeItem('gquick_configs_v4');
+        }
+
+        // 初期化：テーマ適用とデータロード
+        document.addEventListener('DOMContentLoaded', () => {
+            const savedTheme = localStorage.getItem('gquick_theme') || 'dark';
+            setTheme(savedTheme);
+            loadData();
+
+            // iframe内にフォーカスを自動取得（キーボード操作をすぐ使えるようにする）
+            function grabFocus() {
+                window.focus();
+                document.body.focus();
+            }
+            grabFocus();
+            setTimeout(grabFocus, 500);
+            setTimeout(grabFocus, 1500); // GASバナー表示後にも再取得
+            // マウス操作後もフォーカスを維持（検索欄以外）
+            document.addEventListener('click', (e) => {
+                const tag = e.target.tagName;
+                if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return;
+                document.body.focus();
+            });
+        });
+
+        // テーマ切り替え
+        function setTheme(theme) {
+            document.documentElement.setAttribute('data-theme', theme);
+            localStorage.setItem('gquick_theme', theme);
+
+            // 設定メニューを閉じる
+            const settingsMenu = $('settingsMenu');
+            if (settingsMenu) settingsMenu.classList.remove('active');
+
+            // アイコンのチェックマーク（簡易的）
+            updateMenuIcons(theme);
+        }
+
+        function updateMenuIcons(currentTheme) {
+            const darkIcon = $('icon-dark');
+            const lightIcon = $('icon-light');
+            if (!darkIcon || !lightIcon) return;
+
+            // Checkmark SVG path
+            const checkmarkPath = `<path d="M20 6L9 17l-5-5"></path>`;
+            // Original icons
+            const originalDarkIconPath = `<path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>`;
+            const originalLightIconPath = `<circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>`;
+
+            // Reset all
+            darkIcon.style.color = 'var(--text-sub)';
+            lightIcon.style.color = 'var(--text-sub)';
+            darkIcon.innerHTML = originalDarkIconPath;
+            lightIcon.innerHTML = originalLightIconPath;
+
+            if (currentTheme === 'dark') {
+                darkIcon.style.color = 'var(--primary)';
+                darkIcon.innerHTML = checkmarkPath;
+            } else {
+                lightIcon.style.color = 'var(--primary)';
+                lightIcon.innerHTML = checkmarkPath;
+            }
+        }
+
+        // メニュー外クリックで閉じる（設定メニューに加え、チャンネルメニューも対応）
+        document.addEventListener('click', (e) => {
+            const settingsMenu = $('settingsMenu');
+            const channelMenu = $('channelMenu');
+
+            if (settingsMenu && settingsMenu.classList.contains('active')) {
+                const settingsBtn = document.querySelector('button[aria-label="Settings"]');
+                if (!settingsMenu.contains(e.target) && (!settingsBtn || !settingsBtn.contains(e.target))) {
+                    settingsMenu.classList.remove('active');
+                }
+            }
+
+            if (channelMenu && channelMenu.classList.contains('active')) {
+                const channelBtn = document.querySelector('button[aria-label="Channels"]');
+                if (!channelMenu.contains(e.target) && (!channelBtn || !channelBtn.contains(e.target))) {
+                    channelMenu.classList.remove('active');
+                }
+            }
+        });
+
+        function toggleChannelList() {
+            const menu = $('channelMenu');
+            if (!menu) return;
+            // 他のメニューが開いてたら閉じる
+            const settingsMenu = $('settingsMenu');
+            if (settingsMenu) settingsMenu.classList.remove('active');
+            menu.classList.toggle('active');
+        }
+
+        function updateChannelMenu(configs) {
+            if (!configs || !Array.isArray(configs)) return;
+            channelConfigs = configs; // 変数に格納
+            const container = $('channelListContainer');
+            if (!container) return;
+
+            const currentDays = parseInt(localStorage.getItem('gquick_latest_days') || '3', 10);
+
+            // 「最新情報」メニューの追加 (スライド式期間選択付き)
+            let html = `
+                <div class="menu-item" style="border-bottom: 1px solid var(--border-light); cursor: default; white-space: nowrap;">
+                    <div style="cursor: pointer; flex-grow: 1; overflow: hidden; text-overflow: ellipsis;" onclick="showLatest()">
+                        <span style="color: var(--primary);">最新情報の取得</span>
+                    </div>
+                    
+                    <div class="latest-duration-container" id="latestDurationDrawer">
+                        <div class="day-chip ${currentDays === 3 ? 'active' : ''}" onclick="event.stopPropagation(); setLatestDays(3)">3</div>
+                        <div class="day-chip ${currentDays === 7 ? 'active' : ''}" onclick="event.stopPropagation(); setLatestDays(7)">7</div>
+                        <div class="day-chip ${currentDays === 10 ? 'active' : ''}" onclick="event.stopPropagation(); setLatestDays(10)">10</div>
+                        <div class="day-chip ${currentDays === 15 ? 'active' : ''}" onclick="event.stopPropagation(); setLatestDays(15)">15</div>
+                        <div class="day-chip ${currentDays === 0 ? 'active' : ''}" onclick="event.stopPropagation(); setLatestDays(0)">全</div>
+                    </div>
+
+                    <div class="duration-toggle-btn" onclick="event.stopPropagation(); toggleDurationDrawer(this)" id="durationDrawerBtn">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                            <circle cx="12" cy="12" r="3"></circle>
+                            <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+                        </svg>
+                    </div>
+                </div>
+            `;
+
+            if (!configs || configs.length === 0) {
+                container.innerHTML = html + '<div style="padding:12px; color:var(--text-sub);">「チャンネル管理」から設定を追加してください</div>';
+                return;
+            }
+
+            html += configs.map(c => `
+                <div class="menu-item" onclick="loadChannel('${escapeHtml(c.id)}', '${escapeHtml(c.name).replace(/'/g, "\\'")}')">
+                    <span>${escapeHtml(c.name)}</span>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-left:auto; opacity:0.3;">
+                        <polyline points="9 18 15 12 9 6"></polyline>
+                    </svg>
+                </div>
+            `).join('');
+            container.innerHTML = html;
+        }
+
+        /**
+         * 期間選択ドロワーの開閉
+         */
+        function toggleDurationDrawer(btn) {
+            const drawer = document.getElementById('latestDurationDrawer');
+            if (!drawer) return;
+
+            const isActive = drawer.classList.toggle('active');
+            btn.classList.toggle('active');
+
+            // 開いた時は、チップ以外をクリックしても閉じないようにしたいが、
+            // 今回はシンプルにトグルのみ
+        }
+
+        /**
+         * 最新期間の設定と実行
+         */
+        function setLatestDays(days) {
+            localStorage.setItem('gquick_latest_days', days);
+
+            // ドロワーを閉じる
+            const drawer = document.getElementById('latestDurationDrawer');
+            const btn = document.getElementById('durationDrawerBtn');
+            if (drawer) drawer.classList.remove('active');
+            if (btn) btn.classList.remove('active');
+
+            updateChannelMenu(channelConfigs); // UIのチップのアクティブ表示を更新
+            showLatest(days);
+        }
+
+        /**
+         * 最新X日間の動画を表示
+         */
+        function showLatest(days) {
+            // アーカイブ取得中なら停止
+            clearArchiveTimers();
+            currentArchiveChannel = null;
+
+            const targetDays = (days !== undefined && days !== null) ? days : parseInt(localStorage.getItem('gquick_latest_days') || '3', 10);
+            const channelMenu = $('channelMenu');
+            if (channelMenu) channelMenu.classList.remove('active');
+
+            let filtered;
+            let label;
+            if (targetDays === 0) {
+                filtered = allVideos.filter(v => v);
+                label = '全動画';
+            } else {
+                const targetDate = new Date();
+                targetDate.setDate(targetDate.getDate() - targetDays);
+                filtered = allVideos.filter(v => v && new Date(v.publishedAt) >= targetDate);
+                label = `最新情報(${targetDays}日間)`;
+            }
+            currentBaseVideos = filtered;
+            const searchInput = $('searchInput');
+            if (searchInput) searchInput.value = '';
+            renderList(filtered);
+            const updateTime = $('updateTime');
+            if (updateTime) updateTime.innerHTML = `<span style="color:var(--primary); font-weight:700;">${label}</span>を表示中`;
+        }
+
+        function loadChannel(id, name) {
+            // アーカイブ取得中なら停止
+            clearArchiveTimers();
+            currentArchiveChannel = null;
+
+            // メニューを閉じる
+            const channelMenu = $('channelMenu');
+            if (channelMenu) channelMenu.classList.remove('active');
+            const updateTime = $('updateTime');
+
+            // 0秒遷移：手元の全データからフィルタリング
+            const searchName = name.trim().toLowerCase();
+            const channelVideos = allVideos.filter(v =>
+                v && v.channelTitle && v.channelTitle.trim().toLowerCase().includes(searchName)
+            );
+            currentBaseVideos = channelVideos; // コンテクストを更新
+            const searchInput = $('searchInput');
+            if (searchInput) searchInput.value = ''; // 検索窓をリセット
+            renderList(channelVideos);
+
+            if (updateTime) updateTime.innerHTML = `<span style="color:var(--primary); font-weight:bold;">${escapeHtml(name)}</span>: 最新動画を表示中(0s 遷移)`;
+        }
+
+        // --- アーカイブ (全データ取得) 関連 ---
+        let currentArchiveChannel = null;
+        let currentPageToken = null;
+        let isFetchingArchive = false;
+        const ARCHIVE_SAFETY_LIMIT = 500; // 500件ごとに確認を出す
+
+        function toggleArchiveMenu() {
+            const menu = $('archiveMenu');
+            if (!menu) return;
+            // 他を閉じる
+            const settingsMenu = $('settingsMenu');
+            const channelMenu = $('channelMenu');
+            if (settingsMenu) settingsMenu.classList.remove('active');
+            if (channelMenu) channelMenu.classList.remove('active');
+
+            menu.classList.toggle('active');
+
+            if (menu.classList.contains('active')) {
+                updateArchiveChannelList();
+            }
+        }
+
+        function updateArchiveChannelList() {
+            const container = $('archiveChannelListContainer');
+            if (!container) return;
+
+            if (!channelConfigs || channelConfigs.length === 0) {
+                container.innerHTML = '<div style="padding:12px; color:var(--text-sub);">「チャンネル管理」から設定を追加してください</div>';
+                return;
+            }
+
+            // チャンネルリストを表示 (アーカイブモード用)
+            container.innerHTML = channelConfigs.map(c => `
+                <div class="menu-item" onclick="startArchiveFetch('${escapeHtml(c.id)}', '${escapeHtml(c.name).replace(/'/g, "\\'")}')">
+                    <span>${escapeHtml(c.name)}</span>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-left:auto; opacity:0.3;">
+                        <polyline points="9 18 15 12 9 6"></polyline>
+                    </svg>
+                </div>
+            `).join('');
+        }
+
+        async function startArchiveFetch(id, name) {
+            const archiveMenu = $('archiveMenu');
+            if (archiveMenu) archiveMenu.classList.remove('active');
+
+            // 前回のタイマーをクリア
+            clearArchiveTimers();
+            isFetchingArchive = false;
+            archiveRetryCount = 0;
+
+            // 状態リセット
+            currentArchiveChannel = { id: id, name: name };
+            currentPageToken = null;
+            window.archiveVideos = []; // 完全にリセット
+            currentBaseVideos = []; // 検索対象もリセット
+            const searchInput = $('searchInput');
+            if (searchInput) searchInput.value = ''; // 検索窓をリセット
+            renderList([]); // 一旦クリア
+
+            const updateTime = $('updateTime');
+            const listBody = $('listBody');
+            if (updateTime) updateTime.innerHTML = `<span style="color:var(--primary);">${escapeHtml(name)}</span> のデータを取得中...`;
+            if (listBody) listBody.innerHTML = `
+                <div class="loading-overlay">
+                    <div class="spinner"></div>
+                    <p>${escapeHtml(name)} のデータを取得しています...</p>
+                </div>
+                `;
+
+            await fetchMoreArchive();
+        }
+
+        let archiveRetryCount = 0;
+        const ARCHIVE_MAX_RETRY = 3;
+        let archiveTimeoutId = null;   // タイムアウト用
+        let archiveNextTimerId = null; // 次回取得・リトライ用
+
+        // アーカイブ取得の全タイマーをクリア（別操作に移った時に呼ぶ）
+        function clearArchiveTimers() {
+            if (archiveTimeoutId) { clearTimeout(archiveTimeoutId); archiveTimeoutId = null; }
+            if (archiveNextTimerId) { clearTimeout(archiveNextTimerId); archiveNextTimerId = null; }
+        }
+
+        async function fetchMoreArchive() {
+            if (isFetchingArchive || !currentArchiveChannel) return;
+            isFetchingArchive = true;
+
+            // 再開ボタンがあれば削除
+            const safetyBoundary = $('safetyLimitBoundary');
+            if (safetyBoundary) safetyBoundary.innerHTML = '';
+
+            // タイムアウト保護（30秒）
+            let timedOut = false;
+            archiveTimeoutId = setTimeout(() => {
+                timedOut = true;
+                isFetchingArchive = false;
+                archiveRetryCount++;
+                if (archiveRetryCount <= ARCHIVE_MAX_RETRY) {
+                    const updateTime = $('updateTime');
+                    if (updateTime) updateTime.innerHTML = `<span style="color:var(--accent);">タイムアウト - リトライ中 (${archiveRetryCount}/${ARCHIVE_MAX_RETRY})...</span>`;
+                    archiveNextTimerId = setTimeout(fetchMoreArchive, 1000 * archiveRetryCount);
+                } else {
+                    showError("タイムアウト: サーバーからの応答がありません。時間をおいて再度お試しください。");
+                    archiveRetryCount = 0;
+                }
+            }, 30000);
+
+            google.script.run
+                .withSuccessHandler(res => {
+                    clearTimeout(archiveTimeoutId);
+                    archiveTimeoutId = null;
+                    if (timedOut) return; // タイムアウト後の遅延応答は無視
+                    isFetchingArchive = false;
+                    archiveRetryCount = 0; // 成功したらリトライカウントリセット
+
+                    if (res.success) {
+                        const newVideos = res.data || [];
+                        currentPageToken = res.nextPageToken;
+
+                        // アーカイブ専用リストに追加（重複排除）
+                        if (!window.archiveVideos) window.archiveVideos = [];
+                        const existingIds = new Set(window.archiveVideos.map(v => v && v.id).filter(Boolean));
+                        const uniqueNew = newVideos.filter(v => v && v.id && !existingIds.has(v.id));
+                        window.archiveVideos = window.archiveVideos.concat(uniqueNew);
+                        currentBaseVideos = window.archiveVideos; // アーカイブ内容を検索対象にする
+
+                        // 仮想スクロールで即座に再描画（数万件あっても一瞬）
+                        renderList(window.archiveVideos, undefined, true); // アーカイブ追加読み込み時はスクロール維持
+
+                        const statusText = currentPageToken ? '全件取得中...' : '取得完了';
+                        const updateTime = $('updateTime');
+                        if (updateTime) updateTime.innerHTML = `<span style="color:var(--primary); font-weight:bold;">${escapeHtml(currentArchiveChannel.name)}</span>: ${window.archiveVideos.length} 件(${statusText})`;
+
+                        // 安全制限チェック
+                        if (currentPageToken) {
+                            if (window.archiveVideos.length >= ARCHIVE_SAFETY_LIMIT && (window.archiveVideos.length % ARCHIVE_SAFETY_LIMIT === 0)) {
+                                // 制限に達した場合はボタンを出して停止
+                                const boundary = $('safetyLimitBoundary');
+                                if (boundary) {
+                                    boundary.innerHTML = `
+                                    <div style="text-align:center; padding: 20px 0 40px;" id="safetyLimitBtnContainer">
+                                        <p style="color:var(--text-sub); margin-bottom:12px; font-size:14px;">安全のため ${window.archiveVideos.length}件で停止しました</p>
+                                        <button onclick="fetchMoreArchive()" style="margin:0 auto; padding:12px 32px; background:var(--surface); border:1px solid var(--primary); color:var(--primary); font-weight:bold;">
+                                            さらに ${ARCHIVE_SAFETY_LIMIT}件 取得を続ける
+                                        </button>
+                                    </div>`;
+                                }
+                                if (updateTime) updateTime.innerHTML = `<span style="color:var(--accent); font-weight:bold;">安全制限: ${window.archiveVideos.length}件で一時停止中</span>`;
+                            } else {
+                                // 制限以下なら自動で次へ（ブラウザのフリーズを防止するため300ms待機）
+                                archiveNextTimerId = setTimeout(fetchMoreArchive, 300);
+                            }
+                        }
+                    } else {
+                        showError("取得エラー: " + (res.error || '不明なエラー'));
+                    }
+                })
+                .withFailureHandler(err => {
+                    clearTimeout(archiveTimeoutId);
+                    archiveTimeoutId = null;
+                    if (timedOut) return;
+                    isFetchingArchive = false;
+                    archiveRetryCount++;
+                    if (archiveRetryCount <= ARCHIVE_MAX_RETRY) {
+                        const updateTime = $('updateTime');
+                        if (updateTime) updateTime.innerHTML = `<span style="color:var(--accent);">通信エラー - リトライ中 (${archiveRetryCount}/${ARCHIVE_MAX_RETRY})...</span>`;
+                        archiveNextTimerId = setTimeout(fetchMoreArchive, 1000 * archiveRetryCount);
+                    } else {
+                        showError("通信エラー: " + (err.message || '不明なエラー') + "\n時間をおいて再度お試しください。");
+                        archiveRetryCount = 0;
+                    }
+                })
+                .fetchChannelVideos(currentArchiveChannel.id, currentArchiveChannel.name, currentPageToken);
+        }
+
+
+
+        // --- Snapshot Functions (IndexedDB優先、localStorageフォールバック) ---
+        async function loadSnapshot() {
+            try {
+                // 1. IndexedDBから読み込み
+                let data = null;
+                let configs = null;
+                try {
+                    data = await idbGet('snapshot_v4');
+                    configs = await idbGet('configs_v4');
+                } catch (idbErr) {
+                    // IndexedDB失敗時はlocalStorageフォールバック
+                    console.warn("IndexedDB read failed, falling back to localStorage:", idbErr);
+                    const json = localStorage.getItem('gquick_snapshot_v4');
+                    if (json) {
+                        data = JSON.parse(json);
+                        const cJson = localStorage.getItem('gquick_configs_v4');
+                        if (cJson) configs = JSON.parse(cJson);
+                    }
+                }
+
+                if (!Array.isArray(data) || data.length === 0) return false;
+
+                allVideos = data;
+
+                // チャンネル設定の復元
+                if (Array.isArray(configs) && configs.length > 0) {
+                    channelConfigs = configs;
+                    updateChannelMenu(channelConfigs);
+                }
+
+                const updateTime = $('updateTime');
+                if (updateTime) updateTime.innerHTML = `Scanning... (キャッシュ表示中)`;
+
+                // VIPチャンネルの動画を表示（channelConfigsが空なら全件表示にフォールバック）
+                let displayVideos;
+                if (channelConfigs && channelConfigs.length > 0 && channelConfigs[0].id) {
+                    displayVideos = allVideos.filter(v => v && v.channelId === channelConfigs[0].id);
+                }
+                if (!displayVideos || displayVideos.length === 0) {
+                    displayVideos = allVideos.slice(0, 50);
+                }
+                currentBaseVideos = displayVideos;
+                renderList(displayVideos);
+                return true;
+            } catch (e) {
+                console.error("Snapshot Load Error:", e);
+                await clearSnapshotCache();
+            }
+            return false;
+        }
+
+        async function saveSnapshot(data, vipName) {
+            try {
+                // IndexedDBに保存（容量制限なし）
+                await idbPut('snapshot_v4', data);
+                if (vipName) {
+                    localStorage.setItem('gquick_vip_name_v4', vipName);
+                }
+                if (channelConfigs && channelConfigs.length > 0) {
+                    await idbPut('configs_v4', channelConfigs);
+                }
+                // 旧localStorageデータがあれば削除（移行完了）
+                localStorage.removeItem('gquick_snapshot_v4');
+                localStorage.removeItem('gquick_configs_v4');
+            } catch (e) {
+                console.error("IndexedDB save failed, trying localStorage:", e);
+                // フォールバック: localStorageに保存
+                try {
+                    const json = JSON.stringify(data);
+                    if (json.length > 4000000) {
+                        console.warn("Snapshot too large for localStorage:", (json.length / 1024 / 1024).toFixed(1) + "MB");
+                        const updateTime = $('updateTime');
+                        if (updateTime) updateTime.innerHTML = `<span style="color:var(--accent);">データ量が多いため、キャッシュを保存できません（次回起動時は再取得になります）</span>`;
+                        return;
+                    }
+                    localStorage.setItem('gquick_snapshot_v4', json);
+                    if (channelConfigs && channelConfigs.length > 0) {
+                        localStorage.setItem('gquick_configs_v4', JSON.stringify(channelConfigs));
+                    }
+                } catch (lsErr) {
+                    console.error("localStorage save also failed:", lsErr);
+                }
+            }
+        }
+        // --------------------------
+
+        async function loadData() {
+            const listBody = $('listBody');
+            const updateTime = $('updateTime');
+            if (!listBody || !updateTime) return;
+
+            // 1. スナップショットがあれば即座に表示
+            const hasSnapshot = await loadSnapshot();
+
+            // スナップショットがない場合のみLoading表示
+            if (!hasSnapshot) {
+                listBody.innerHTML = `
+                <div class="loading-overlay">
+                        <div class="spinner"></div>
+                        <p>チャンネル情報を取得中...</p>
+                    </div>
+                `;
+            }
+
+            try {
+                // Server: シートからチャンネル設定一覧を取得（タイムアウト付き）
+                const configRes = await Promise.race([
+                    new Promise((resolve, reject) => {
+                        google.script.run
+                            .withSuccessHandler(resolve)
+                            .withFailureHandler(reject)
+                            .getChannelConfigs();
+                    }),
+                    new Promise((_, reject) => setTimeout(() => reject(new Error('サーバー応答タイムアウト（30秒）')), 30000))
+                ]);
+
+                if (!configRes || !configRes.success) throw new Error((configRes && configRes.error) || '設定取得に失敗しました');
+
+                const configs = configRes.data;
+                if (!Array.isArray(configs)) throw new Error('設定データが不正です');
+
+                // 確実な同期
+                channelConfigs = configs;
+                updateChannelMenu(configs);
+
+                if (configs.length === 0) {
+                    listBody.innerHTML = `
+                        <div class="loading-overlay" style="text-align:center;">
+                            <p style="font-size:16px; font-weight:bold; margin-bottom:16px;">チャンネルが設定されていません</p>
+                            <p style="color:var(--text-sub); font-size:13px; margin-bottom:20px;">右上の ⚙ 設定 →「チャンネル管理」から<br>見たいYouTubeチャンネルを追加してください</p>
+                            <button onclick="openChannelManager()" style="padding:12px 28px; background:var(--primary); color:#fff; border:none; border-radius:8px; font-size:14px; font-weight:bold; cursor:pointer;">
+                                チャンネルを追加する
+                            </button>
+                        </div>`;
+                    return;
+                }
+
+                // UI初期化 (スナップショットがある場合はクリアしない)
+                if (!hasSnapshot) {
+                    allVideos = [];
+                    listBody.innerHTML = '';
+                }
+
+                // 最新X日間の日時を計算 (フィルタリング用)
+                const currentDays = parseInt(localStorage.getItem('gquick_latest_days') || '3', 10);
+                const targetDate = new Date();
+                targetDate.setDate(targetDate.getDate() - currentDays);
+
+                // --- ★ VIP + 残り全チャンネルを同時に取得開始 ---
+                const firstChannel = configs[0];
+                updateTime.innerHTML = `Scanning: ${escapeHtml(firstChannel.name)}...`;
+
+                // 残りのチャンネル準備
+                const remainingConfigs = configs.slice(1);
+
+                // 小分けバッチ処理
+                const BATCH_SIZE = 20;
+                const MAX_CONCURRENCY = 10;
+                const batches = [];
+                for (let i = 0; i < remainingConfigs.length; i += BATCH_SIZE) {
+                    batches.push(remainingConfigs.slice(i, i + BATCH_SIZE));
+                }
+
+                let completedBatches = 0;
+                let activeWorkers = 0;
+                let batchIndex = 0;
+                let bgSyncDone = false;
+
+                // VIP取得（Promise）
+                const vipPromise = new Promise((resolve) => {
+                    google.script.run
+                        .withSuccessHandler(res => resolve(res))
+                        .withFailureHandler(err => resolve({ success: false, error: err.message }))
+                        .fetchVideosBatch([firstChannel]);
+                });
+
+                // バックグラウンド同期（VIPと同時に開始）
+                const bgPromise = (batches.length > 0) ? new Promise((resolveAll) => {
+                    const nextBatch = () => {
+                        if (batchIndex >= batches.length) {
+                            if (activeWorkers === 0) resolveAll();
+                            return;
+                        }
+
+                        const currentBatches = batches[batchIndex++];
+                        activeWorkers++;
+
+                        google.script.run
+                            .withSuccessHandler(res => {
+                                activeWorkers--;
+                                completedBatches++;
+
+                                if (res.success) {
+                                    const newVideos = res.data;
+                                    allVideos = allVideos.concat(newVideos);
+
+                                    const uniqueMap = new Map();
+                                    allVideos.forEach(v => { if (v && v.id) uniqueMap.set(v.id, v); });
+                                    allVideos = Array.from(uniqueMap.values());
+
+                                    const percent = batches.length > 0 ? Math.round((completedBatches / batches.length) * 100) : 100;
+                                    updateTime.innerHTML = `同期中... ${percent}% (${completedBatches}/${batches.length})`;
+                                }
+                                nextBatch();
+                            })
+                            .withFailureHandler(err => {
+                                activeWorkers--;
+                                completedBatches++;
+                                nextBatch();
+                            })
+                            .fetchVideosBatch(currentBatches);
+                    };
+
+                    for (let i = 0; i < Math.min(MAX_CONCURRENCY, batches.length); i++) {
+                        nextBatch();
+                    }
+                }) : Promise.resolve();
+
+                // VIP結果を先に表示（返ってき次第即表示）
+                try {
+                    const firstRes = await vipPromise;
+                    if (firstRes.success) {
+                        const otherVideos = allVideos.filter(v => v && v.channelId !== firstChannel.id);
+                        allVideos = firstRes.data.concat(otherVideos);
+
+                        const vipVideos = allVideos.filter(v => v && v.channelId === firstChannel.id);
+                        currentBaseVideos = vipVideos;
+                        // キャッシュ表示中の場合はスクロール位置を維持（ユーザー操作中のリセット防止）
+                        const keepScroll = virtualData.length > 0;
+                        renderList(vipVideos, undefined, keepScroll);
+
+                        updateTime.innerHTML = `<span style="color:var(--primary); font-weight:700;">${escapeHtml(firstChannel.name)}</span> の動画を表示中... (背景同期中)`;
+                    }
+                } catch (e) {
+                    console.error("First Channel Load Error:", e);
+                }
+
+                // 残りの完了を待つ
+                await bgPromise;
+
+                if (remainingConfigs.length === 0) {
+                    saveSnapshot(allVideos, firstChannel.name);
+                    return;
+                }
+
+                // 全同期完了後に1回だけソート
+                allVideos.sort((a, b) => new Date(b.publishedAt) - new Date(a.publishedAt));
+
+                saveSnapshot(allVideos, firstChannel.name);
+                const now = new Date();
+                const timeStr = `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')} `;
+                updateTime.innerHTML = `同期完了(${allVideos.length}件) : ${timeStr} `;
+
+            } catch (err) {
+                showError(err.message);
+            }
+        }
+
+        // --- 複数選択・コピー機能 ---
+        let selectedUrls = new Set();
+
+        function toggleVideoSelection(url, element) {
+            if (selectedUrls.has(url)) {
+                selectedUrls.delete(url);
+                element.classList.remove('selected');
+            } else {
+                selectedUrls.add(url);
+                element.classList.add('selected');
+            }
+            updateBulkCopyButton();
+        }
+
+        function updateBulkCopyButton() {
+            const group = $('bulkActionGroup');
+            if (!group) return;
+            const count = selectedUrls.size;
+
+            if (count > 0) {
+                group.classList.add('has-selection');
+            } else {
+                group.classList.remove('has-selection');
+            }
+        }
+
+        function clearSelection() {
+            selectedUrls.clear();
+            // DOM上の全 .video-item から selected を消す
+            document.querySelectorAll('.video-item.selected').forEach(el => {
+                el.classList.remove('selected');
+            });
+            updateBulkCopyButton();
+        }
+
+        function copySelectedUrls() {
+            if (selectedUrls.size === 0) return;
+            const text = Array.from(selectedUrls).join('\n');
+            navigator.clipboard.writeText(text).then(() => {
+                const btn = $('bulkCopyBtn');
+                if (!btn) return;
+                const originalContent = btn.innerHTML;
+                btn.innerHTML = 'コピー完了！';
+                btn.style.borderColor = '#34d399';
+                btn.style.color = '#34d399';
+
+                setTimeout(() => {
+                    btn.innerHTML = originalContent;
+                    btn.style.borderColor = '';
+                    btn.style.color = '';
+                }, 1500);
+            }).catch(err => {
+                console.error('Clipboard copy failed:', err);
+            });
+        }
+
+        let virtualData = [];
+        let currentRenderEmptyMessage = '';
+        const ITEM_HEIGHT = 96; // 90px (item) + 6px (margin-bottom)
+        let isScrolling = false;
+        let scrollListenerRegistered = false;
+
+        // スクロールリスナー（重複登録防止）
+        function initScrollListener() {
+            if (scrollListenerRegistered) return;
+            scrollListenerRegistered = true;
+            var scrollContainer = document.querySelector('.app-scroll-wrapper') || window;
+            scrollContainer.addEventListener('scroll', () => {
+                if (!isScrolling) {
+                    window.requestAnimationFrame(() => {
+                        updateVirtualScroll();
+                        isScrolling = false;
+                    });
+                    isScrolling = true;
+                }
+            });
+        }
+        initScrollListener();
+
+        function renderList(videos, emptyMessage, keepScroll) {
+            virtualData = videos || [];
+            currentRenderEmptyMessage = emptyMessage || '一致する動画が見つかりませんでした';
+            // コンテクスト切り替え時はスクロール位置とキーボードフォーカスをリセット
+            if (!keepScroll) {
+                const sc = document.querySelector('.app-scroll-wrapper');
+                if (sc) sc.scrollTop = 0;
+                kbFocusIndex = -1;
+            }
+            updateVirtualScroll(); // 初期描画
+        }
+
+        function updateVirtualScroll() {
+            const listBody = $('listBody');
+            if (!listBody) return;
+
+            if (virtualData.length === 0) {
+                listBody.style.paddingTop = '8px';
+                listBody.style.paddingBottom = '60px';
+                listBody.innerHTML = `<div class="loading-overlay"><p>${currentRenderEmptyMessage}</p></div>`;
+                return;
+            }
+
+            const sc = document.querySelector('.app-scroll-wrapper');
+            const scrollTop = sc ? sc.scrollTop : window.scrollY;
+            const viewportHeight = sc ? sc.clientHeight : window.innerHeight;
+
+            // 画面に見える開始インデックスと終了インデックスの計算（上下に余裕を持たせる）
+            let startIndex = Math.floor(scrollTop / ITEM_HEIGHT) - 5;
+            if (startIndex < 0) startIndex = 0;
+
+            let endIndex = startIndex + Math.ceil(viewportHeight / ITEM_HEIGHT) + 10;
+            if (endIndex > virtualData.length) endIndex = virtualData.length;
+
+            const visibleVideos = virtualData.slice(startIndex, endIndex);
+
+            // スクロールバーの長さを維持するための擬似パディング（デフォルトの 8px, 60px を加算）
+            const paddingTop = (startIndex * ITEM_HEIGHT) + 8;
+            const paddingBottom = ((virtualData.length - endIndex) * ITEM_HEIGHT) + 60;
+
+            const htmlString = visibleVideos.map((v) => {
+                if (!v || !v.title || !v.url) return '';
+                const isSelected = selectedUrls.has(v.url);
+                return `
+                <div onclick="if(_lpFired){_lpFired=false;return;} toggleVideoSelection('${v.url}', this)"
+                     oncontextmenu="event.preventDefault(); window.open('${v.url}', '_blank');"
+                     ontouchstart="_lpStart('${v.url}');"
+                     ontouchmove="_lpCancel();"
+                     ontouchend="_lpCancel();"
+                     class="video-item ${isSelected ? 'selected' : ''}">
+                    <div class="thumbnail-wrapper">
+                        <img src="${v.thumbnail || ''}" alt="thumb" loading="lazy">
+                    </div>
+                    <div class="video-content">
+                        <div class="video-title" title="${escapeHtml(v.title)}">${escapeHtml(v.title)}</div>
+                        <div class="video-meta">
+                            <span class="meta-item views">
+                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="opacity:0.7"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+                                ${v.viewCount ? v.viewCount.toLocaleString() : '0'}
+                            </span>
+                            <span class="meta-item date">${formatDate(v.publishedAt)}</span>
+                            <span class="meta-item duration">${v.duration || ''}</span>
+                            <span class="meta-item channel" title="${escapeHtml(v.channelTitle)}" style="white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${escapeHtml(v.channelTitle)}</span>
+                            <div class="meta-item url-copy" onclick="event.stopPropagation(); copyUrl('${v.url}', this)" title="動画URLをコピー">
+                                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg>
+                                <span style="font-weight:700;">URLコピー</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                `;
+            }).join('');
+
+            // パディングと中身のHTMLを一括更新（DOM要素数激減・超軽量化）
+            // パディングと中身のHTMLを一括更新（DOM要素数激減・超軽量化）
+            listBody.style.paddingTop = paddingTop + 'px';
+            listBody.style.paddingBottom = paddingBottom + 'px';
+            listBody.innerHTML = htmlString;
+
+            // キーボードフォーカスの復元
+            if (kbFocusIndex >= 0) {
+                applyKbFocusStyle();
+            }
+        }
+
+        // --- キーボードナビゲーション ---
+        let kbFocusIndex = -1; // virtualData内のインデックス
+
+        function applyKbFocusStyle() {
+            // 全フォーカスを一旦クリア
+            document.querySelectorAll('.video-item.kb-focus').forEach(el => el.classList.remove('kb-focus'));
+
+            if (kbFocusIndex < 0 || kbFocusIndex >= virtualData.length) return;
+
+            // 現在描画されているアイテムの中から該当要素を探す
+            const listBody = $('listBody');
+            if (!listBody) return;
+            const items = listBody.querySelectorAll('.video-item');
+            const sc = document.querySelector('.app-scroll-wrapper');
+
+            // 仮想スクロールのstartIndexを逆算
+            const scrollTop = sc ? sc.scrollTop : 0;
+            let startIndex = Math.floor(scrollTop / ITEM_HEIGHT) - 5;
+            if (startIndex < 0) startIndex = 0;
+
+            const domIndex = kbFocusIndex - startIndex;
+            if (domIndex >= 0 && domIndex < items.length) {
+                items[domIndex].classList.add('kb-focus');
+            }
+        }
+
+        function scrollToFocusedItem() {
+            const sc = document.querySelector('.app-scroll-wrapper');
+            if (!sc || kbFocusIndex < 0) return;
+            const itemTop = kbFocusIndex * ITEM_HEIGHT + 8; // 8px = listBody paddingTop初期値
+            const itemBottom = itemTop + ITEM_HEIGHT;
+            const headerHeight = 60; // ヘッダー高さの概算
+
+            // アイテムが画面上に出ているか
+            if (itemTop < sc.scrollTop + headerHeight) {
+                sc.scrollTop = itemTop - headerHeight;
+            } else if (itemBottom > sc.scrollTop + sc.clientHeight) {
+                sc.scrollTop = itemBottom - sc.clientHeight + 10;
+            }
+        }
+
+        document.addEventListener('keydown', (e) => {
+            // 検索欄にフォーカス中は無視（文字入力を優先）
+            const searchInput = $('searchInput');
+            if (document.activeElement === searchInput) {
+                // Escapeで検索欄からフォーカスを外す
+                if (e.key === 'Escape') {
+                    searchInput.blur();
+                    e.preventDefault();
+                }
+                return;
+            }
+
+            // モーダルが開いている場合はEscapeで閉じる
+            if (e.key === 'Escape') {
+                const channelModal = $('channelModal');
+                const manualModal = $('manualModal');
+                if (channelModal && channelModal.style.display === 'flex') {
+                    closeChannelManager();
+                    e.preventDefault();
+                    return;
+                }
+                if (manualModal && manualModal.classList.contains('active')) {
+                    closeManual();
+                    e.preventDefault();
+                    return;
+                }
+            }
+
+            if (virtualData.length === 0) return;
+
+            switch (e.key) {
+                case 'ArrowDown':
+                case 'j': // Vim風
+                    e.preventDefault();
+                    kbFocusIndex = Math.min(kbFocusIndex + 1, virtualData.length - 1);
+                    scrollToFocusedItem();
+                    updateVirtualScroll();
+                    break;
+
+                case 'ArrowUp':
+                case 'k': // Vim風
+                    e.preventDefault();
+                    if (kbFocusIndex <= 0) {
+                        kbFocusIndex = 0;
+                    } else {
+                        kbFocusIndex--;
+                    }
+                    scrollToFocusedItem();
+                    updateVirtualScroll();
+                    break;
+
+                case 'Enter':
+                    // Enter: 動画を新タブで開く
+                    if (kbFocusIndex >= 0 && kbFocusIndex < virtualData.length) {
+                        e.preventDefault();
+                        const v = virtualData[kbFocusIndex];
+                        if (v && v.url) window.open(v.url, '_blank');
+                    }
+                    break;
+
+                case ' ':
+                    // Space: 選択/解除
+                    if (kbFocusIndex >= 0 && kbFocusIndex < virtualData.length) {
+                        e.preventDefault();
+                        const sv = virtualData[kbFocusIndex];
+                        if (!sv || !sv.url) break;
+                        if (selectedUrls.has(sv.url)) {
+                            selectedUrls.delete(sv.url);
+                        } else {
+                            selectedUrls.add(sv.url);
+                        }
+                        updateBulkCopyButton();
+                        updateVirtualScroll();
+                    }
+                    break;
+
+                case 'PageDown': {
+                    e.preventDefault();
+                    const scPd = document.querySelector('.app-scroll-wrapper');
+                    const pageSize = scPd ? Math.max(1, Math.floor(scPd.clientHeight / ITEM_HEIGHT) - 1) : 10;
+                    if (kbFocusIndex < 0) kbFocusIndex = 0;
+                    kbFocusIndex = Math.min(kbFocusIndex + pageSize, virtualData.length - 1);
+                    scrollToFocusedItem();
+                    updateVirtualScroll();
+                    break;
+                }
+
+                case 'PageUp': {
+                    e.preventDefault();
+                    const scPu = document.querySelector('.app-scroll-wrapper');
+                    const pageSizeUp = scPu ? Math.max(1, Math.floor(scPu.clientHeight / ITEM_HEIGHT) - 1) : 10;
+                    if (kbFocusIndex < 0) kbFocusIndex = 0;
+                    kbFocusIndex = Math.max(kbFocusIndex - pageSizeUp, 0);
+                    scrollToFocusedItem();
+                    updateVirtualScroll();
+                    break;
+                }
+
+                case 'Home':
+                    e.preventDefault();
+                    kbFocusIndex = 0;
+                    scrollToFocusedItem();
+                    updateVirtualScroll();
+                    break;
+
+                case 'End':
+                    e.preventDefault();
+                    kbFocusIndex = virtualData.length - 1;
+                    scrollToFocusedItem();
+                    updateVirtualScroll();
+                    break;
+
+                case '/':
+                    // 検索にフォーカス
+                    e.preventDefault();
+                    if (searchInput) searchInput.focus();
+                    break;
+            }
+        });
+
+        // --- チャンネル管理 (DBモード) ロジック ---
+        function openChannelManager() {
+            // モーダルを表示
+            const modal = $('channelModal');
+            if (modal) modal.style.display = 'flex';
+
+            // ★多重ガード: 起動時に必ずボタンをリセット
+            const btn = $('saveChannelBtn');
+            if (btn) {
+                btn.innerHTML = '設定を保存';
+                btn.disabled = false;
+            }
+
+            renderChannelEditor();
+        }
+
+        function closeChannelManager() {
+            const modal = $('channelModal');
+            if (modal) modal.style.display = 'none';
+        }
+
+        function renderChannelEditor() {
+            const list = $('channelEditorList');
+            if (!list) return;
+            if (!channelConfigs || channelConfigs.length === 0) {
+                list.innerHTML = '<p style="text-align:center; padding:15px; color:var(--text-sub); font-size:12px;">チャンネルがありません。「チャンネルを追加」から登録してください。</p>';
+                return;
+            }
+            list.innerHTML = channelConfigs.map((ch, i) => `
+                <div class="channel-editor-item" style="display:flex; align-items:center; gap:8px; margin-bottom:8px; padding-bottom:8px; border-bottom:1px solid rgba(255,255,255,0.05);">
+                    <div style="display:flex; flex-direction:column; gap:4px;">
+                        <button class="icon-btn" title="上に移動" onclick="moveChannel(${i}, -1)" ${i === 0 ? 'disabled style="opacity:0.2;"' : ''} style="padding:2px; font-size:10px;">▲</button>
+                        <button class="icon-btn" title="下に移動" onclick="moveChannel(${i}, 1)" ${i === channelConfigs.length - 1 ? 'disabled style="opacity:0.2;"' : ''} style="padding:2px; font-size:10px;">▼</button>
+                    </div>
+                    <div style="flex:1;">
+                        <div style="font-size:10px; color:var(--primary); margin-bottom:2px; font-weight:bold;">${escapeHtml(ch.name || 'IDを入力してください')}</div>
+                        <input type="text" value="${ch.id}" placeholder="チャンネルID (UC...) または URL" data-index="${i}" onchange="syncInputsToConfigs()" style="width:100%; font-size:12px; padding:6px;">
+                    </div>
+                    <button class="icon-btn" onclick="removeChannelInput(${i})" style="color:#ef4444; background:transparent; font-size:18px; padding:4px;">&times;</button>
+                </div>
+            `).join('');
+        }
+
+        // --- HTMLエスケープヘルパー ---
+        function escapeHtml(str) {
+            if (!str) return '';
+            return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#039;');
+        }
+
+        // --- ★重要: 入力内容を即時反映し、URLを自動パースするロジック ---
+        function syncInputsToConfigs() {
+            const inputs = document.querySelectorAll('#channelEditorList input');
+            inputs.forEach((input, idx) => {
+                if (!channelConfigs[idx]) return;
+                const rawVal = input.value.trim();
+                const cleanId = extractChannelId(rawVal);
+
+                if (channelConfigs[idx].id !== cleanId) {
+                    channelConfigs[idx].id = cleanId;
+                    channelConfigs[idx].name = '取得中...';
+                    channelConfigs[idx].sheetName = '取得中...';
+
+                    const container = input.closest('.channel-editor-item');
+                    if (container) {
+                        const nameLabel = container.querySelector('div[style*="font-size:10px"]');
+                        if (nameLabel) nameLabel.innerText = '保存後に取得...';
+                    }
+                }
+            });
+        }
+
+        function extractChannelId(str) {
+            if (!str) return '';
+            str = str.trim();
+            // /channel/UC... 形式のURLからIDを抽出
+            const channelMatch = str.match(/\/channel\/(UC[a-zA-Z0-9_-]{22})/);
+            if (channelMatch) return channelMatch[1];
+            // UC/UU始まりかつ24文字のIDならそのまま
+            if (/^U[CU][a-zA-Z0-9_-]{22}$/.test(str)) return str;
+            // @handle 形式 (youtube.com/@handle または @handle 単体)
+            const handleMatch = str.match(/(?:youtube\.com\/)?@([a-zA-Z0-9_.\-]+)/);
+            if (handleMatch) return '@' + handleMatch[1];
+            // /c/name または /user/name 形式
+            const customMatch = str.match(/youtube\.com\/(?:c|user)\/([^/?&]+)/);
+            if (customMatch) return '@' + customMatch[1];
+            // それ以外は無効
+            return str;
+        }
+
+        function validateChannelId(id) {
+            if (!id) return false;
+            return /^U[CU][a-zA-Z0-9_-]{22}$/.test(id);
+        }
+
+        // --- ★重要: 保存ボタンの状態を初期化 ---
+        function resetSaveButton() {
+            const btn = $('saveChannelBtn');
+            if (btn) {
+                btn.innerHTML = '設定を保存';
+                btn.disabled = false;
+            }
+        }
+
+        function moveChannel(index, direction) {
+            syncInputsToConfigs();
+            const newIndex = index + direction;
+            if (newIndex < 0 || newIndex >= channelConfigs.length) return;
+            const temp = channelConfigs[index];
+            channelConfigs[index] = channelConfigs[newIndex];
+            channelConfigs[newIndex] = temp;
+            resetSaveButton();
+            renderChannelEditor();
+        }
+
+        function addChannelInput() {
+            syncInputsToConfigs();
+            channelConfigs.push({ id: '', name: '取得中...', sheetName: '取得中...' });
+            resetSaveButton();
+            renderChannelEditor();
+        }
+
+        function removeChannelInput(index) {
+            syncInputsToConfigs();
+            channelConfigs.splice(index, 1);
+            resetSaveButton();
+            renderChannelEditor();
+        }
+
+        function saveChannelsFromUI(btn) {
+            syncInputsToConfigs();
+            const newConfigs = [];
+            const invalidIds = [];
+            const handleConfigs = []; // @handle形式の解決待ちリスト
+
+            channelConfigs.forEach(ch => {
+                const id = ch.id.trim();
+                if (!id) return;
+                if (validateChannelId(id)) {
+                    newConfigs.push({ id, name: ch.name || '取得中...', sheetName: ch.sheetName || '取得中...' });
+                } else if (id.startsWith('@')) {
+                    handleConfigs.push({ handle: id, name: ch.name });
+                } else {
+                    invalidIds.push(id);
+                }
+            });
+
+            if (invalidIds.length > 0) {
+                alert('以下のチャンネルIDが正しくありません。\nUCから始まる24文字のIDを入力してください。\n\n' + invalidIds.join('\n'));
+                return;
+            }
+
+            if (newConfigs.length === 0 && handleConfigs.length === 0) {
+                if (!confirm('チャンネルをすべて削除しますか？')) return;
+            }
+
+            btn.innerHTML = '保存中...';
+            btn.disabled = true;
+
+            const doSave = (configs) => {
+                if (configs.length === 0) {
+                    if (!confirm('有効なチャンネルが0件です。全削除しますか？')) { resetSaveButton(); return; }
+                }
+                google.script.run
+                    .withSuccessHandler(async (res) => {
+                        if (res.success) {
+                            alert('設定を保存しました。');
+                            resetSaveButton();
+                            closeChannelManager();
+                            await clearSnapshotCache();
+                            allVideos = [];
+                            channelConfigs = [];
+                            loadData();
+                        } else {
+                            alert('保存失敗: ' + res.error);
+                            resetSaveButton();
+                        }
+                    })
+                    .withFailureHandler(err => {
+                        alert('通信エラー: ' + err.message);
+                        resetSaveButton();
+                    })
+                    .saveChannelConfigs(configs);
+            };
+
+            if (handleConfigs.length > 0) {
+                btn.innerHTML = 'ハンドル解決中...';
+                const handles = handleConfigs.map(h => h.handle);
+                google.script.run
+                    .withSuccessHandler(resolved => {
+                        const unresolved = [];
+                        handleConfigs.forEach(hc => {
+                            const r = resolved[hc.handle];
+                            if (r) {
+                                newConfigs.push({ id: r.id, name: r.name, sheetName: r.name });
+                            } else {
+                                unresolved.push(hc.handle);
+                            }
+                        });
+                        if (unresolved.length > 0) {
+                            alert('以下のハンドルが見つかりませんでした。\n' + unresolved.join('\n'));
+                        }
+                        btn.innerHTML = '保存中...';
+                        doSave(newConfigs);
+                    })
+                    .withFailureHandler(err => {
+                        alert('ハンドル解決エラー: ' + err.message);
+                        resetSaveButton();
+                    })
+                    .resolveChannelHandles(handles);
+            } else {
+                doSave(newConfigs);
+            }
+        }
+
+        function toggleSettings() {
+            const menu = $('settingsMenu');
+            if (!menu) return;
+            menu.classList.toggle('active');
+            const channelMenu = $('channelMenu');
+            const archiveMenu = $('archiveMenu');
+            if (channelMenu) channelMenu.classList.remove('active');
+            if (archiveMenu) archiveMenu.classList.remove('active');
+        }
+
+        let _filterTimer = null;
+        function filterList() {
+            clearTimeout(_filterTimer);
+            _filterTimer = setTimeout(() => {
+                const input = $('searchInput');
+                if (!input) return;
+                const query = input.value.toLowerCase();
+                const clearBtn = $('searchClearBtn');
+                if (clearBtn) clearBtn.style.display = query ? 'flex' : 'none';
+                const source = currentBaseVideos.length > 0 ? currentBaseVideos : allVideos;
+                const filtered = source.filter(v =>
+                    v && v.title && v.title.toLowerCase().includes(query)
+                );
+                renderList(filtered);
+            }, 250);
+        }
+
+        function clearSearch() {
+            const input = $('searchInput');
+            if (!input) return;
+            input.value = '';
+            filterList();
+            input.focus();
+        }
+
+        function formatDate(iso) {
+            if (!iso) return '';
+            const d = new Date(iso);
+            if (isNaN(d.getTime())) return '日付不明';
+            const now = new Date();
+            const diffHrs = Math.floor((now - d) / 3600000);
+            if (diffHrs < 24) {
+                return `<span class="batch-label">NEW · ${diffHrs}時間前</span>`;
+            }
+            return `${d.getFullYear()}/${(d.getMonth() + 1).toString().padStart(2, '0')}/${d.getDate().toString().padStart(2, '0')} ${d.getHours().toString().padStart(2, '0')}:${d.getMinutes().toString().padStart(2, '0')}`;
+        }
+
+        function translateError(msg) {
+            if (!msg) return '不明なエラーが発生しました';
+            if (msg.includes('quota') || msg.includes('Quota')) return 'YouTube APIの通信制限に達しました。翌日になれば自動的にリセットされます。';
+            if (msg.includes('notFound') || msg.includes('not found')) return 'チャンネルまたは動画が見つかりませんでした。チャンネルIDを確認してください。';
+            if (msg.includes('forbidden') || msg.includes('Forbidden')) return 'アクセスが拒否されました。チャンネルが非公開の可能性があります。';
+            if (msg.includes('timeout') || msg.includes('Timeout') || msg.includes('タイムアウト')) return 'サーバーからの応答がありません。時間をおいて再度お試しください。';
+            if (msg.includes('NetworkError') || msg.includes('Failed to fetch')) return 'ネットワーク接続を確認してください。';
+            return msg;
+        }
+
+        function showError(msg) {
+            const listBody = $('listBody');
+            if (!listBody) return;
+            const userMsg = translateError(msg);
+            listBody.innerHTML = `
+                <div class="loading-overlay" style="color:#f87171; text-align:center; max-width:80%; margin:0 auto;">
+                    <p style="font-weight:bold; margin-bottom:12px;">エラーが発生しました</p>
+                    <div style="font-size:13px; margin-bottom:16px;">${escapeHtml(userMsg)}</div>
+                    <button onclick="refreshData()" style="padding:10px 24px; background:var(--surface); border:1px solid var(--primary); color:var(--primary); border-radius:6px; font-size:13px; font-weight:bold; cursor:pointer;">再読み込み</button>
+                </div>
+            `;
+        }
+
+        async function copyUrl(url, el) {
+            try {
+                await navigator.clipboard.writeText(url);
+                const originalContent = el.innerHTML;
+                el.style.color = 'var(--badge-text)';
+                el.style.background = 'var(--badge-bg)';
+                el.style.borderColor = 'var(--badge-border)';
+                el.innerHTML = '<span style="font-weight:800;">URL Copied!</span>';
+                setTimeout(() => {
+                    el.style.color = '';
+                    el.style.background = '';
+                    el.style.borderColor = '';
+                    el.innerHTML = originalContent;
+                }, 1500);
+            } catch (err) {
+                console.error('Copy failed', err);
+            }
+        }
+
+        async function refreshData() {
+            const btn = $('refreshBtn');
+            if (!btn) return;
+            const originalHTML = btn.innerHTML;
+            const settingsMenu = $('settingsMenu');
+            if (settingsMenu) settingsMenu.classList.remove('active');
+            btn.style.pointerEvents = 'none';
+            btn.style.opacity = '0.6';
+            btn.innerHTML = '🔄 更新中...';
+            try {
+                await new Promise((resolve, reject) => {
+                    google.script.run
+                        .withSuccessHandler(res => {
+                            if (res.success) resolve();
+                            else reject(new Error(res.error));
+                        })
+                        .withFailureHandler(reject)
+                        .clearScriptCache();
+                });
+                await clearSnapshotCache();
+                allVideos = [];
+                window.archiveVideos = [];
+                channelConfigs = [];
+                await loadData();
+            } catch (e) {
+                console.error("Refresh Error:", e);
+            } finally {
+                btn.style.pointerEvents = '';
+                btn.style.opacity = '';
+                btn.innerHTML = originalHTML;
+            }
+        }
+
+
+        // --- Manual Modal ---
+        function openManual() {
+            const manualModal = $('manualModal');
+            const settingsMenu = $('settingsMenu');
+            if (manualModal) manualModal.classList.add('active');
+            if (settingsMenu) settingsMenu.classList.remove('active');
+        }
+
+        function closeManual() {
+            const manualModal = $('manualModal');
+            if (manualModal) manualModal.classList.remove('active');
+        }
+    </script>
+</body>
+
+</html>

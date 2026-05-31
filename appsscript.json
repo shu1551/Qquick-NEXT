@@ -1,0 +1,22 @@
+{
+  "timeZone": "Etc/GMT-9",
+  "dependencies": {
+    "enabledAdvancedServices": [
+      {
+        "userSymbol": "YouTube",
+        "serviceId": "youtube",
+        "version": "v3"
+      }
+    ]
+  },
+  "webapp": {
+    "executeAs": "USER_DEPLOYING",
+    "access": "MYSELF"
+  },
+  "exceptionLogging": "STACKDRIVER",
+  "oauthScopes": [
+    "https://www.googleapis.com/auth/script.external_request",
+    "https://www.googleapis.com/auth/youtube.readonly"
+  ],
+  "runtimeVersion": "V8"
+}

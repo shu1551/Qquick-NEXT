@@ -1,0 +1,228 @@
+<div class="manual-container">
+    <div class="manual-section">
+        <h3>1. Q-クイック NEXTとは</h3>
+        <p>Q-クイック NEXTは、登録したYouTubeチャンネルの最新動画を高速にチェックできるWebアプリケーションです。
+            YouTubeの公式機能を使わず、独自のリスト管理によって「自分が見たいチャンネル」だけを効率よく巡回できるように設計されています。</p>
+        <p>動画は、<strong>パソコンならば右クリック、スマホは長押し</strong>で再生されます。</p>
+
+        <h4 style="color:var(--primary-color); margin-top:10px;">主な特徴:</h4>
+        <ul>
+            <li><strong>プライバシー保護</strong>:
+                チャンネル登録リスト（DB）は、あなたのGoogleアカウントごとの専用領域（UserProperties）に保存されます。他の利用者と設定が混ざることはありません。</li>
+            <li><strong>自分だけのカスタマイズ</strong>: チャンネルの追加・削除・並び替えが自由に行えます。</li>
+            <li><strong>通信制限（クォータ）</strong>: 動画データの取得には、アクセスしているあなた自身のGoogleアカウントの通信枠を使用します。</li>
+        </ul>
+    </div>
+
+    <div class="manual-section">
+        <h3>2. 利用開始の手順</h3>
+        <p>このアプリは、Google Apps Scriptのプロジェクトをコピーして自分専用の環境として利用します。</p>
+
+        <div style="background:rgba(255,255,255,0.05); padding:15px; border-radius:8px; margin-top:10px;">
+            <p><strong>セットアップ手順:</strong></p>
+            <ol>
+                <li>配布されたGoogle Apps Scriptのプロジェクトを開きます。</li>
+                <li>左上のメニューから <strong>「概要」</strong> → <strong>「コピーを作成」</strong> を選び、自分のGoogleドライブにコピーします。</li>
+                <li>コピーしたプロジェクトを開き、右上の <strong>「デプロイ」</strong> → <strong>「新しいデプロイ」</strong> を選びます。</li>
+                <li>種類で <strong>「ウェブアプリ」</strong> を選択し、<strong>「デプロイ」</strong> を押します。</li>
+                <li>「承認が必要です」と表示されたら <strong>「アクセスを承認」</strong> をクリックします。</li>
+                <li>Googleアカウントを選択し、「このアプリは確認されていません」と表示されたら、画面左下の <strong>「詳細」</strong> をクリックします。</li>
+                <li>展開された箇所の一番下にある <strong>「（安全ではないページ）に移動」</strong> をクリックし、<strong>「許可」</strong> を押します。</li>
+                <li>表示されたウェブアプリのURLをブックマークすれば、以降はそのURLから利用できます。</li>
+            </ol>
+            <p style="font-size:0.9em; color:var(--text-sub); margin-top:5px;">
+                ※コピー後は完全に独立した環境です。チャンネル設定やデータは自分だけのものになります。</p>
+        </div>
+    </div>
+
+    <div class="manual-section">
+        <h3>3. スマートフォンでの推奨設定</h3>
+        <p>スマホで利用する場合、ブラウザの枠を消して「本物のアプリ」のように全画面で表示する設定を推奨します。</p>
+        <ul>
+            <li><strong>iPhone (Safari)</strong>: 画面下部の共有ボタンアイコン → 「ホーム画面に追加」</li>
+            <li><strong>Android (Chrome)</strong>: 右上のメニューアイコン → 「ホーム画面に追加」</li>
+        </ul>
+        <p>ホーム画面に追加されたアイコンから起動することで、フルスクリーンモードで快適に操作できます。</p>
+    </div>
+
+    <div class="manual-section">
+        <h3>4. 画面の見方と操作方法</h3>
+
+        <h4 style="color:var(--accent-color);">基本操作</h4>
+        <ul>
+            <li>アプリを起動すると、登録済みチャンネルの最新動画一覧が表示されます。</li>
+            <li><strong>動画の再生</strong>: 見たい動画をパソコンならば右クリック、スマホは長押しするとYouTubeが開き、再生されます。</li>
+            <li><strong>更新</strong>: 右上の設定メニュー（歯車アイコン）から「最新情報を再取得」を選ぶと、キャッシュをクリアして最新情報を再取得します。</li>
+        </ul>
+
+        <h4 style="color:var(--accent-color); margin-top:15px;">キーボード操作（PC）</h4>
+        <p>パソコンではキーボードだけで動画リストを操作できます。フォーカス中のアイテムは黄色の枠で表示されます。</p>
+        <table style="width:100%; border-collapse:collapse; margin:10px 0 15px; font-size:0.95em;">
+            <tr style="border-bottom:1px solid rgba(255,255,255,0.1);">
+                <td style="padding:6px 12px; font-weight:bold; white-space:nowrap;">↑ / ↓</td>
+                <td style="padding:6px 12px;">動画を一つずつ移動</td>
+            </tr>
+            <tr style="border-bottom:1px solid rgba(255,255,255,0.1);">
+                <td style="padding:6px 12px; font-weight:bold;">Enter</td>
+                <td style="padding:6px 12px;">動画を新タブで開く</td>
+            </tr>
+            <tr style="border-bottom:1px solid rgba(255,255,255,0.1);">
+                <td style="padding:6px 12px; font-weight:bold;">Space</td>
+                <td style="padding:6px 12px;">動画を選択 / 解除</td>
+            </tr>
+            <tr style="border-bottom:1px solid rgba(255,255,255,0.1);">
+                <td style="padding:6px 12px; font-weight:bold;">Home / End</td>
+                <td style="padding:6px 12px;">先頭 / 末尾に移動</td>
+            </tr>
+            <tr style="border-bottom:1px solid rgba(255,255,255,0.1);">
+                <td style="padding:6px 12px; font-weight:bold;">/</td>
+                <td style="padding:6px 12px;">検索欄にフォーカス</td>
+            </tr>
+            <tr>
+                <td style="padding:6px 12px; font-weight:bold;">Escape</td>
+                <td style="padding:6px 12px;">検索欄から離脱 / モーダルを閉じる</td>
+            </tr>
+        </table>
+
+        <h4 style="color:var(--accent-color); margin-top:15px;">チャンネル管理（DB）</h4>
+        <p>「自分が見たいチャンネル」のリストを編集するには、右上のメニュー（歯車アイコン）から「チャンネル管理（DB）」を開きます。<br>※ スマホは横に２ページなので注意。</p>
+
+        <h5 style="color:var(--text-primary); margin-top:10px;">A. チャンネルを追加する</h5>
+        <ol>
+            <li>「チャンネル管理（DB）」画面で <strong>「＋ チャンネルを追加」</strong> を押します。</li>
+            <li>YouTubeの <strong>チャンネルID</strong>（UCから始まる24桁の文字列）を入力します。<br><span
+                    style="font-size:0.9em; color:var(--text-sub);">※チャンネル名ではなくIDが必要です。</span></li>
+            <li><strong>「設定を保存」</strong> を押します。<br>※チャンネル名（アイコン等）はYouTubeから自動的に取得・補完されるため、入力は不要です。</li>
+        </ol>
+        <div
+            style="background:rgba(66, 133, 244, 0.1); border-left:4px solid var(--primary-color); padding:8px 12px; margin:5px 0 15px 0; font-size:0.9rem;">
+            💡 <strong>チャンネルIDの調べ方</strong>: YouTubeでそのチャンネルのページを開き、URLを確認してください。<code>youtube.com/channel/UC...</code>
+            の UC 以降がIDです。
+        </div>
+
+        <h5 style="color:var(--text-primary);">B. チャンネルを削除する</h5>
+        <ol>
+            <li>リストから不要なチャンネルの削除ボタン（ゴミ箱アイコンや×ボタン）を押します。</li>
+            <li><strong>「設定を保存」</strong> を押して確定します。</li>
+        </ol>
+
+        <h5 style="color:var(--text-primary); margin-top:10px;">C. 並び順とVIP機能</h5>
+        <p>リストの一番上（先頭）に登録されているチャンネルは<strong>「VIP」</strong>扱いとなります。
+            アプリ起動時に、このVIPチャンネルの動画一覧が最優先で表示されるため、最もよく見るチャンネルを先頭に配置することをお勧めします。</p>
+    </div>
+
+    <div class="manual-section">
+        <h3>5. 通信制限（クォータ）とトラブルシューティング</h3>
+        <p>システムの安定運用のために、Googleアカウント側の仕様である「通信制限（クォータ）」を正しく把握しておくことが重要です。</p>
+
+        <h4 style="color:var(--accent-color);">リソース制限のメカニズム</h4>
+        <p>Q-クイック NEXTは、<strong>「アクセスしているユーザー自身のGoogleアカウント」</strong>に割り当てられたYouTube APIの通信枠を使用して動作します。</p>
+        <ul>
+            <li><strong>通常の使用範囲</strong>: 日常的な動画チェックであれば、制限にかかることはまずありません。</li>
+            <li><strong>制限が発生するケース</strong>:
+                一一度に数千本の動画情報を取得しようとするなど、極端に負荷の高い操作を短時間で行った場合、翌日まで制限がかかることがあります。この制限は翌日になれば自動的にリセットされます。</li>
+        </ul>
+    </div>
+
+    <div class="manual-section">
+        <h3>6. よくある質問と注意点</h3>
+        <div style="margin-bottom:15px;">
+            <p style="font-weight:bold; color:var(--primary-color);">Q. データの取得が遅い、または止まる。</p>
+            <p>A. 短時間に大量の動画を取得しようとすると、Googleの通信制限（クォータ）にかかる場合があります。制限は翌日になれば自動的にリセットされます。</p>
+        </div>
+        <div style="margin-bottom:15px;">
+            <p style="font-weight:bold; color:var(--primary-color);">Q. 他の人に自分のリストが見えてしまいますか？</p>
+            <p>A. いいえ。設定はあなたのアカウント専用の領域に保存されるため、他の利用者に影響を与えたり、見られたりすることはありません。</p>
+        </div>
+        <div>
+            <p style="font-weight:bold; color:var(--primary-color);">Q. 画面の色を変えたい。</p>
+            <p>A. 画面上のアイコン（太陽/月）をタップすることで、ダークモードとライトモードを切り替えることができます。</p>
+        </div>
+    </div>
+
+    <div
+        style="text-align:center; padding-top:20px; border-top:1px solid rgba(255,255,255,0.1); color:var(--text-secondary); font-size:0.8rem;">
+        © 2026 Q-Quick NEXT Project. All rights reserved.
+    </div>
+</div>
+
+<style>
+    .manual-container {
+        color: var(--text-primary);
+        /* 親のテーマカラー継承 */
+        line-height: 1.6;
+        padding: 0 10px;
+    }
+
+    /* ライトモード時の文字色強制補正 */
+    [data-theme="light"] .manual-container,
+    [data-theme="light"] .manual-container p,
+    [data-theme="light"] .manual-container li,
+    [data-theme="light"] .manual-container h3,
+    [data-theme="light"] .manual-container h4,
+    [data-theme="light"] .manual-container h5 {
+        color: #1e293b !important;
+    }
+
+    [data-theme="light"] .manual-container strong {
+        color: #0f172a !important;
+    }
+
+    [data-theme="light"] .manual-section {
+        border-bottom: 1px solid #cbd5e1 !important;
+    }
+
+    .manual-section {
+        margin-bottom: 25px;
+        padding-bottom: 20px;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .manual-section:last-child {
+        border-bottom: none;
+    }
+
+    .manual-section h3 {
+        color: var(--accent-color);
+        margin-bottom: 12px;
+        font-size: 1.25rem;
+        font-weight: 700;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        border-left: 4px solid var(--accent-color);
+        padding-left: 10px;
+    }
+
+    /* ライトモードのアクセントカラー調整 */
+    [data-theme="light"] .manual-section h3 {
+        color: #0369a1 !important;
+        border-left-color: #0369a1 !important;
+    }
+
+    .manual-section h4 {
+        font-size: 1.05rem;
+        font-weight: 700;
+        margin-bottom: 8px;
+    }
+
+    .manual-section ul,
+    .manual-section ol {
+        margin-left: 20px;
+        margin-bottom: 15px;
+    }
+
+    .manual-section li {
+        margin-bottom: 6px;
+    }
+
+    /* 強調表示 */
+    .manual-section strong {
+        color: var(--primary-color);
+        font-weight: 700;
+    }
+
+    [data-theme="light"] .manual-section strong {
+        color: #2563eb !important;
+    }
+</style>
