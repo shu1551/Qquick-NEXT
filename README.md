@@ -21,7 +21,7 @@ YouTube チャンネル巡回用の Google Apps Script (GAS) Webアプリ。登�
 
 ### いちばん簡単：Drive からコピー
 
-[こちらのリンク](https://script.google.com/d/1msoB51Zgu5UF-tQD7LW91ynuhWeqYfOsiBf1uupHO8KusbrY9gqAqKT6/copy) を開いて「**コピーを作成**」を押すだけ。自分の Google ドライブにプロジェクトごと複製されます（ファイルのコピペ不要）。あとは下の「**4. デプロイ**」以降を行えば使えます。
+[こちらの共有リンク](https://script.google.com/d/1msoB51Zgu5UF-tQD7LW91ynuhWeqYfOsiBf1uupHO8KusbrY9gqAqKT6/edit?usp=sharing) を開き、ドライブで**右クリック →「コピーを作成」**するだけ。自分の Google ドライブにプロジェクトごと複製されます（ファイルのコピペ不要）。あとは下の「**4. デプロイ**」以降を行えば使えます。
 
 ### 手動でセットアップ（clasp / コピペ派向け）
 
